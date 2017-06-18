@@ -99,7 +99,7 @@ contract StandardToken is StandardTokenProtocol {
 contract ADX is StandardToken {
 
 	//FIELDS
-	string public name = "Adex";
+	string public name = "AdEx";
 	string public symbol = "ADX";
 	uint public decimals = 3;
 
@@ -135,7 +135,7 @@ contract ADX is StandardToken {
 	}
 
 	// Can only be called if the `crowdfunder` is allowed to mint tokens. Any
-	// time before `endMintingTime`.
+	// time before ` endMintingTime`.
 	modifier when_mintable {
 		if (now >= endMintingTime) throw;
 		_;
@@ -212,19 +212,20 @@ contract Contribution is SafeMath {
 	uint public constant STAGE_FOUR_TIME_END = 4 weeks;
 	
 	//Prices of ADX
-	uint public constant PRICE_STAGE_ONE   = 480000;
-	uint public constant PRICE_STAGE_TWO   = 440000;
-	uint public constant PRICE_STAGE_THREE = 400000;
-	uint public constant PRICE_STAGE_FOUR  = 360000;
-	uint public constant PRICE_PREBUY        = 480000;
+	uint public constant PRICE_STANDARD    = 900000; // MAX_SUPPLY / (valuation / ethPrice)
+	uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 1.3;
+	uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 1.15;
+	uint public constant PRICE_STAGE_THREE = PRICE_STANDARD * 1;
+	uint public constant PRICE_STAGE_FOUR  = PRICE_STANDARD * 1;
+	uint public constant PRICE_PREBUY        = PRICE_STANDARD * 1.3; // 20% bonus will be given from illiquid tokens-
 
 	//ADX Token Limits
 	uint public constant MAX_SUPPLY =        100000000000;
 	uint public constant ALLOC_ILLIQUID_TEAM = 8000000000;
-	uint public constant ALLOC_LIQUID_TEAM =  13000000000;
+	uint public constant ALLOC_LIQUID_TEAM =  10000000000;
 	uint public constant ALLOC_BOUNTIES =      2000000000;
-	uint public constant ALLOC_NEW_USERS =    17000000000;
-	uint public constant ALLOC_CROWDSALE =    60000000000;
+	uint public constant ALLOC_NEW_USERS =    40000000000;
+	uint public constant ALLOC_CROWDSALE =    40000000000;
 	uint public constant PREBUY_PORTION_MAX = 31250 * PRICE_PREBUY;
 	
 	//ASSIGNED IN INITIALIZATION

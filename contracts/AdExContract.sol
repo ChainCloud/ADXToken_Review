@@ -96,7 +96,7 @@ contract StandardToken is StandardTokenProtocol {
 
 }
 
-contract ADXToken is StandardToken {
+contract ADX is StandardToken {
 
 	//FIELDS
 	string public name = "Adex";
@@ -142,7 +142,7 @@ contract ADXToken is StandardToken {
 	}
 
 	// Initialization contract assigns address of crowdfund contract and end time.
-	function ADXToken(address _minter, uint _endMintingTime, uint _finalSupply) {
+	function ADX(address _minter, uint _endMintingTime, uint _finalSupply) {
 		endMintingTime = _endMintingTime;
 		finalSupply = _finalSupply;
 		minter = _minter;
@@ -240,7 +240,7 @@ contract Contribution is SafeMath {
 	address public ownerAddress; //Address of the contract owner. Can halt the crowdsale.
 	
 	//Contracts
-	ADXToken public ADXToken; //External token contract hollding the ADX
+	ADX public ADXToken; //External token contract hollding the ADX
 	
 	//Running totals
 	uint public etherRaised; //Total Ether raised.
@@ -305,7 +305,7 @@ contract Contribution is SafeMath {
 		prebuyAddress = _prebuy;
 		multisigAddress = _multisig;
 		adexAddress = _adex;
-		ADXToken = new ADXToken(this, publicEndTime, MAX_SUPPLY);
+		ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
 		ADXToken.createIlliquidToken(adexAddress, ALLOC_ILLIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
 		ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);

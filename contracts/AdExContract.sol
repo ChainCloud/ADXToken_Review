@@ -100,15 +100,15 @@ contract ADXToken is StandardToken {
 
 	//FIELDS
 	string public name = "Adex";
-  string public symbol = "ADX";
-  uint public decimals = 3;
+	string public symbol = "ADX";
+	uint public decimals = 3;
 
 	//CONSTANTS
 	uint public constant LOCKOUT_PERIOD = 1 years; //time after end date that illiquid ADX can be transferred
 
 	//ASSIGNED IN INITIALIZATION
 	uint public endMintingTime; //Timestamp after which no more tokens can be created
-  uint public finalSupply; //Amount after which no more tokens can be created
+	uint public finalSupply; //Amount after which no more tokens can be created
 	address public minter; //address of the account which may mint new tokens
 
 	mapping (address => uint) public illiquidBalance; //Balance of 'Frozen funds'
@@ -144,7 +144,7 @@ contract ADXToken is StandardToken {
 	// Initialization contract assigns address of crowdfund contract and end time.
 	function ADXToken(address _minter, uint _endMintingTime, uint _finalSupply) {
 		endMintingTime = _endMintingTime;
-    finalSupply = _finalSupply;
+		finalSupply = _finalSupply;
 		minter = _minter;
 	}
 
@@ -206,16 +206,18 @@ contract Contribution is SafeMath {
 
 	//CONSTANTS
 	//Time limits
-	uint public constant STAGE_ONE_TIME_END = 5 hours;
-	uint public constant STAGE_TWO_TIME_END = 72 hours;
+	uint public constant STAGE_ONE_TIME_END = 24 hours; // first day bonus
+	uint public constant STAGE_TWO_TIME_END = 1 weeks;
 	uint public constant STAGE_THREE_TIME_END = 2 weeks;
 	uint public constant STAGE_FOUR_TIME_END = 4 weeks;
+	
 	//Prices of ADX
 	uint public constant PRICE_STAGE_ONE   = 480000;
 	uint public constant PRICE_STAGE_TWO   = 440000;
 	uint public constant PRICE_STAGE_THREE = 400000;
 	uint public constant PRICE_STAGE_FOUR  = 360000;
 	uint public constant PRICE_PREBUY        = 480000;
+
 	//ADX Token Limits
 	uint public constant MAX_SUPPLY =        100000000000;
 	uint public constant ALLOC_ILLIQUID_TEAM = 8000000000;
@@ -224,22 +226,27 @@ contract Contribution is SafeMath {
 	uint public constant ALLOC_NEW_USERS =    17000000000;
 	uint public constant ALLOC_CROWDSALE =    60000000000;
 	uint public constant PREBUY_PORTION_MAX = 31250 * PRICE_PREBUY;
+	
 	//ASSIGNED IN INITIALIZATION
 	//Start and end times
 	uint public publicStartTime; //Time in seconds public crowd fund starts.
 	uint public privateStartTime; //Time in seconds when pre-buy can purchase up to 31250 ETH worth of ADX;
 	uint public publicEndTime; //Time in seconds crowdsale ends
+	
 	//Special Addresses
 	address public prebuyAddress; //Address used by pre-buy
 	address public multisigAddress; //Address to which all ether flows.
 	address public adexAddress; //Address to which ALLOC_BOUNTIES, ALLOC_LIQUID_TEAM, ALLOC_NEW_USERS, ALLOC_ILLIQUID_TEAM is sent to.
 	address public ownerAddress; //Address of the contract owner. Can halt the crowdsale.
+	
 	//Contracts
 	ADXToken public ADXToken; //External token contract hollding the ADX
+	
 	//Running totals
 	uint public etherRaised; //Total Ether raised.
 	uint public ADXSold; //Total ADX created
 	uint public prebuyPortionTotal; //Total of Tokens purchased by pre-buy. Not to exceed PREBUY_PORTION_MAX.
+	
 	//booleans
 	bool public halted; //halts the crowd sale if true.
 

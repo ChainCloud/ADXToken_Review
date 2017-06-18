@@ -1,0 +1,9 @@
+{
+  "name": "adex-token-sale",
+  "version": "1.0.0",
+  "description": "AdEx initial token sale contracts",
+  "main": "index.js",
+  "repository": "https://github.com/AdExBlockchain/adex-token-sale",
+  "author": "Ivo Georgiev, WINGS",
+  "license": "MIT"
+}

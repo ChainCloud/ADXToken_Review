@@ -1,12 +1,10 @@
 pragma solidity ^0.4.8;
 
 
+// TODO: vesting logic for tokens (12m, 3m cliff)
+
+// OpenZeppelin SafeMath
 contract SafeMath {
-
-  function assert(bool assertion) internal {
-    if (!assertion) throw;
-  }
-
   function safeMul(uint a, uint b) internal returns (uint) {
     uint c = a * b;
     assert(a == 0 || c / a == b);
@@ -20,9 +18,41 @@ contract SafeMath {
     return c;
   }
 
+  function safeSub(uint a, uint b) internal returns (uint) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  function safeAdd(uint a, uint b) internal returns (uint) {
+    uint c = a + b;
+    assert(c>=a && c>=b);
+    return c;
+  }
+
+  function max64(uint64 a, uint64 b) internal constant returns (uint64) {
+    return a >= b ? a : b;
+  }
+
+  function min64(uint64 a, uint64 b) internal constant returns (uint64) {
+    return a < b ? a : b;
+  }
+
+  function max256(uint256 a, uint256 b) internal constant returns (uint256) {
+    return a >= b ? a : b;
+  }
+
+  function min256(uint256 a, uint256 b) internal constant returns (uint256) {
+    return a < b ? a : b;
+  }
+
+  function assert(bool assertion) internal {
+    if (!assertion) {
+      throw;
+    }
+  }
 }
 
-
+// ERC20
 contract StandardTokenProtocol {
 
     function totalSupply() constant returns (uint256 totalSupply) {}
@@ -176,6 +206,9 @@ contract ADX is StandardToken {
 	function makeLiquid()
 		when_thawable
 	{
+		//uint allReleasable = 
+		//uint releasedSoFar = illiquidInitial[msg.sender] - illiquidBalance[msg.sender];
+		//allReleasable - releasedSoFar
 		balances[msg.sender] += illiquidBalance[msg.sender];
 		illiquidBalance[msg.sender] = 0;
 	}

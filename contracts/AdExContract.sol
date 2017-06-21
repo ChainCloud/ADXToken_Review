@@ -253,7 +253,7 @@ contract Contribution is SafeMath {
 	uint public constant DECIMALS = 10000;
 
 	//Prices of ADX
-	uint public constant PRICE_STANDARD    = 900*DECIMALS; // MAX_SUPPLY / (valuation / ethPrice)
+	uint public constant PRICE_STANDARD    = 900*DECIMALS; // ADX received per one ETH; MAX_SUPPLY / (valuation / ethPrice)
 	uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 1.3;
 	uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 1.15;
 	uint public constant PRICE_STAGE_THREE = PRICE_STANDARD * 1;

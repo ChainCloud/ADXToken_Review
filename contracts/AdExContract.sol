@@ -134,7 +134,7 @@ contract ADX is StandardToken {
 	//FIELDS
 	string public name = "AdEx";
 	string public symbol = "ADX";
-	uint public decimals = 3;
+	uint public decimals = 4;
 
 	//CONSTANTS
 	uint public constant LOCKOUT_PERIOD = 1 years; //time after end date that illiquid ADX can be transferred
@@ -247,8 +247,13 @@ contract Contribution is SafeMath {
 	uint public constant STAGE_THREE_TIME_END = 2 weeks;
 	uint public constant STAGE_FOUR_TIME_END = 4 weeks;
 	
+
+	// Decimals
+	// WARNING: Must be synced up with ADX.decimals
+	uint public constant DECIMALS = 10000;
+
 	//Prices of ADX
-	uint public constant PRICE_STANDARD    = 900000; // MAX_SUPPLY / (valuation / ethPrice)
+	uint public constant PRICE_STANDARD    = 900*DECIMALS; // MAX_SUPPLY / (valuation / ethPrice)
 	uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 1.3;
 	uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 1.15;
 	uint public constant PRICE_STAGE_THREE = PRICE_STANDARD * 1;
@@ -256,13 +261,13 @@ contract Contribution is SafeMath {
 	uint public constant PRICE_PREBUY        = PRICE_STANDARD * 1.3; // 20% bonus will be given from illiquid tokens-
 
 	//ADX Token Limits
-	uint public constant MAX_SUPPLY =        100000000000;
-	uint public constant ALLOC_ILLIQUID_TEAM = 8000000000;
-	uint public constant ALLOC_LIQUID_TEAM =  10000000000;
-	uint public constant ALLOC_BOUNTIES =      2000000000;
-	uint public constant ALLOC_NEW_USERS =    40000000000;
-	uint public constant ALLOC_CROWDSALE =    40000000000;
-	uint public constant PREBUY_PORTION_MAX = 31250 * PRICE_PREBUY;
+	uint public constant MAX_SUPPLY =        100000000*DECIMALS;
+	uint public constant ALLOC_ILLIQUID_TEAM = 8000000*DECIMALS;
+	uint public constant ALLOC_LIQUID_TEAM =  10000000*DECIMALS;
+	uint public constant ALLOC_BOUNTIES =      2000000*DECIMALS;
+	uint public constant ALLOC_NEW_USERS =    40000000*DECIMALS;
+	uint public constant ALLOC_CROWDSALE =    40000000*DECIMALS;
+	uint public constant PREBUY_PORTION_MAX = 32 * DECIMALS * PRICE_PREBUY;
 	
 	//ASSIGNED IN INITIALIZATION
 	//Start and end times

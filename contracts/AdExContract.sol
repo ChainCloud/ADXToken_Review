@@ -1,31 +1,34 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 
 // TODO: vesting logic for tokens (12m, 3m cliff)
 
-// OpenZeppelin SafeMath
-contract SafeMath {
-  function safeMul(uint a, uint b) internal returns (uint) {
+// https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/SafeMath.sol
+/**
+ * Math operations with safety checks
+ */
+library SafeMath {
+  function mul(uint a, uint b) internal returns (uint) {
     uint c = a * b;
     assert(a == 0 || c / a == b);
     return c;
   }
 
-  function safeDiv(uint a, uint b) internal returns (uint) {
-    assert(b > 0);
+  function div(uint a, uint b) internal returns (uint) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
     uint c = a / b;
-    assert(a == b * c + a % b);
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
     return c;
   }
 
-  function safeSub(uint a, uint b) internal returns (uint) {
+  function sub(uint a, uint b) internal returns (uint) {
     assert(b <= a);
     return a - b;
   }
 
-  function safeAdd(uint a, uint b) internal returns (uint) {
+  function add(uint a, uint b) internal returns (uint) {
     uint c = a + b;
-    assert(c>=a && c>=b);
+    assert(c >= a);
     return c;
   }
 
@@ -376,7 +379,7 @@ contract Contribution is SafeMath {
 		internal
 		returns (uint o_amount)
 	{
-		o_amount = safeDiv(safeMul(msg.value, _rate), 1 ether);
+		o_amount = div(mul(msg.value, _rate), 1 ether);
 		if (o_amount > _remaining) throw;
 		if (!multisigAddress.send(msg.value)) throw;
 		if (!ADXToken.createToken(msg.sender, o_amount)) throw;

@@ -1,7 +1,9 @@
 pragma solidity ^0.4.11;
 
 
-// TODO: vesting logic for tokens (12m, 3m cliff)
+// TODO:
+// openzeppelin for everything up to ADX
+// vesting tokens (12m, 3m cliff)
 
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/SafeMath.sol
 /**
@@ -55,79 +57,136 @@ library SafeMath {
   }
 }
 
-// ERC20
-contract ERC20 {
 
-    function totalSupply() constant returns (uint256 totalSupply) {}
-    function balanceOf(address _owner) constant returns (uint256 balance) {}
-    function transfer(address _recipient, uint256 _value) returns (bool success) {}
-    function transferFrom(address _from, address _recipient, uint256 _value) returns (bool success) {}
-    function approve(address _spender, uint256 _value) returns (bool success) {}
-    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {}
-
-    event Transfer(address indexed _from, address indexed _recipient, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-
+// https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/token/ERC20Basic.sol
+/**
+ * @title ERC20Basic
+ * @dev Simpler version of ERC20 interface
+ * @dev see https://github.com/ethereum/EIPs/issues/20
+ */
+contract ERC20Basic {
+  uint public totalSupply;
+  function balanceOf(address who) constant returns (uint);
+  function transfer(address to, uint value);
+  event Transfer(address indexed from, address indexed to, uint value);
 }
 
 
-contract StandardToken is ERC20 {
+// https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/token/ERC20.sol
+/**
+ * @title ERC20 interface
+ * @dev see https://github.com/ethereum/EIPs/issues/20
+ */
+contract ERC20 is ERC20Basic {
+  function allowance(address owner, address spender) constant returns (uint);
+  function transferFrom(address from, address to, uint value);
+  function approve(address spender, uint value);
+  event Approval(address indexed owner, address indexed spender, uint value);
+}
 
-    modifier when_can_transfer(address _from, uint256 _value) {
-        if (balances[_from] >= _value) _;
-    }
 
-    modifier when_can_receive(address _recipient, uint256 _value) {
-        if (balances[_recipient] + _value > balances[_recipient]) _;
-    }
+// https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/token/BasicToken.sol
+/**
+ * @title Basic token
+ * @dev Basic version of StandardToken, with no allowances. 
+ */
+contract BasicToken is ERC20Basic {
+  using SafeMath for uint;
 
-    modifier when_is_allowed(address _from, address _delegate, uint256 _value) {
-        if (allowed[_from][_delegate] >= _value) _;
-    }
+  mapping(address => uint) balances;
 
-    function transfer(address _recipient, uint256 _value)
-        when_can_transfer(msg.sender, _value)
-        when_can_receive(_recipient, _value)
-        returns (bool o_success)
-    {
-        balances[msg.sender] -= _value;
-        balances[_recipient] += _value;
-        Transfer(msg.sender, _recipient, _value);
-        return true;
-    }
+  /**
+   * @dev Fix for the ERC20 short address attack.
+   */
+  modifier onlyPayloadSize(uint size) {
+     if(msg.data.length < size + 4) {
+       throw;
+     }
+     _;
+  }
 
-    function transferFrom(address _from, address _recipient, uint256 _value)
-        when_can_transfer(_from, _value)
-        when_can_receive(_recipient, _value)
-        when_is_allowed(_from, msg.sender, _value)
-        returns (bool o_success)
-    {
-        allowed[_from][msg.sender] -= _value;
-        balances[_from] -= _value;
-        balances[_recipient] += _value;
-        Transfer(_from, _recipient, _value);
-        return true;
-    }
+  /**
+  * @dev transfer token for a specified address
+  * @param _to The address to transfer to.
+  * @param _value The amount to be transferred.
+  */
+  function transfer(address _to, uint _value) onlyPayloadSize(2 * 32) {
+    balances[msg.sender] = balances[msg.sender].sub(_value);
+    balances[_to] = balances[_to].add(_value);
+    Transfer(msg.sender, _to, _value);
+  }
 
-    function balanceOf(address _owner) constant returns (uint256 balance) {
-        return balances[_owner];
-    }
-
-    function approve(address _spender, uint256 _value) returns (bool o_success) {
-        allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    function allowance(address _owner, address _spender) constant returns (uint256 o_remaining) {
-        return allowed[_owner][_spender];
-    }
-
-    mapping (address => uint256) balances;
-    mapping (address => mapping (address => uint256)) allowed;
-    uint256 public totalSupply;
+  /**
+  * @dev Gets the balance of the specified address.
+  * @param _owner The address to query the the balance of. 
+  * @return An uint representing the amount owned by the passed address.
+  */
+  function balanceOf(address _owner) constant returns (uint balance) {
+    return balances[_owner];
+  }
 
 }
+
+// https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/token/StandardToken.sol
+/**
+ * @title Standard ERC20 token
+ *
+ * @dev Implemantation of the basic standart token.
+ * @dev https://github.com/ethereum/EIPs/issues/20
+ * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
+ */
+contract StandardToken is BasicToken, ERC20 {
+
+  mapping (address => mapping (address => uint)) allowed;
+
+
+  /**
+   * @dev Transfer tokens from one address to another
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint the amout of tokens to be transfered
+   */
+  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) {
+    var _allowance = allowed[_from][msg.sender];
+
+    // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
+    // if (_value > _allowance) throw;
+
+    balances[_to] = balances[_to].add(_value);
+    balances[_from] = balances[_from].sub(_value);
+    allowed[_from][msg.sender] = _allowance.sub(_value);
+    Transfer(_from, _to, _value);
+  }
+
+  /**
+   * @dev Aprove the passed address to spend the specified amount of tokens on beahlf of msg.sender.
+   * @param _spender The address which will spend the funds.
+   * @param _value The amount of tokens to be spent.
+   */
+  function approve(address _spender, uint _value) {
+
+    // To change the approve amount you first have to reduce the addresses`
+    //  allowance to zero by calling `approve(_spender, 0)` if it is not
+    //  already 0 to mitigate the race condition described here:
+    //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+    if ((_value != 0) && (allowed[msg.sender][_spender] != 0)) throw;
+
+    allowed[msg.sender][_spender] = _value;
+    Approval(msg.sender, _spender, _value);
+  }
+
+  /**
+   * @dev Function to check the amount of tokens than an owner allowed to a spender.
+   * @param _owner address The address which owns the funds.
+   * @param _spender address The address which will spend the funds.
+   * @return A uint specifing the amount of tokens still avaible for the spender.
+   */
+  function allowance(address _owner, address _spender) constant returns (uint remaining) {
+    return allowed[_owner][_spender];
+  }
+
+}
+
 
 contract ADX is StandardToken {
 
@@ -218,25 +277,23 @@ contract ADX is StandardToken {
 
 	// Transfer amount of tokens from sender account to recipient.
 	// Only callable after the crowd fund end date.
-	function transfer(address _recipient, uint _amount)
+	function transfer(address _from, uint _to)
 		when_transferable
-		returns (bool o_success)
 	{
-		return super.transfer(_recipient, _amount);
+		super.transfer(_from, _to);
 	}
 
 	// Transfer amount of tokens from a specified address to a recipient.
 	// Only callable after the crowd fund end date.
-	function transferFrom(address _from, address _recipient, uint _amount)
+	function transferFrom(address _from, address _to, uint _value)
 		when_transferable
-		returns (bool o_success)
 	{
-		return super.transferFrom(_from, _recipient, _amount);
+		super.transferFrom(_from, _to, _value);
 	}
 }
 
 
-contract Contribution is SafeMath {
+contract Contribution {
 
 	//FIELDS
 
@@ -250,15 +307,15 @@ contract Contribution is SafeMath {
 
 	// Decimals
 	// WARNING: Must be synced up with ADX.decimals
-	uint public constant DECIMALS = 10000;
+	uint private constant DECIMALS = 10000;
 
 	//Prices of ADX
 	uint public constant PRICE_STANDARD    = 900*DECIMALS; // ADX received per one ETH; MAX_SUPPLY / (valuation / ethPrice)
-	uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 1.3;
-	uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 1.15;
-	uint public constant PRICE_STAGE_THREE = PRICE_STANDARD * 1;
-	uint public constant PRICE_STAGE_FOUR  = PRICE_STANDARD * 1;
-	uint public constant PRICE_PREBUY        = PRICE_STANDARD * 1.3; // 20% bonus will be given from illiquid tokens-
+	uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 100/30;
+	uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 100/15;
+	uint public constant PRICE_STAGE_THREE = PRICE_STANDARD;
+	uint public constant PRICE_STAGE_FOUR  = PRICE_STANDARD;
+	uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/30; // 20% bonus will be given from illiquid tokens-
 
 	//ADX Token Limits
 	uint public constant MAX_SUPPLY =        100000000*DECIMALS;
@@ -384,7 +441,7 @@ contract Contribution is SafeMath {
 		internal
 		returns (uint o_amount)
 	{
-		o_amount = div(mul(msg.value, _rate), 1 ether);
+		o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
 		if (o_amount > _remaining) throw;
 		if (!multisigAddress.send(msg.value)) throw;
 		if (!ADXToken.createToken(msg.sender, o_amount)) throw;

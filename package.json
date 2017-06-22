@@ -5,5 +5,8 @@
   "main": "index.js",
   "repository": "https://github.com/AdExBlockchain/adex-token",
   "author": "Ivo Georgiev, WINGS, others",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "truffle": "^3.2.5"
+  }
 }

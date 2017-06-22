@@ -579,7 +579,7 @@ contract ADX is VestedToken {
 }
 
 
-contract Contribution {
+contract AdExContrib {
 
 	//FIELDS
 
@@ -676,7 +676,7 @@ contract Contribution {
 	// FUNCTIONS
 
 	//Initialization function. Deploys ADXToken contract assigns values, to all remaining fields, creates first entitlements in the ADX Token contract.
-	function Contribution(
+	function AdExContrib(
 		address _prebuy,
 		address _multisig,
 		address _adex,

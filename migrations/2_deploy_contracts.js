@@ -1,5 +1,5 @@
-var AdExContract = artifacts.require("./AdExContract.sol");
+var AdExContrib = artifacts.require("./AdExContrib.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(AdExContract);
+  deployer.deploy(AdExContrib);
 };

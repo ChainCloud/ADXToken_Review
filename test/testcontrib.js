@@ -6,7 +6,7 @@ contract('AdExContrib', function(accounts) {
     return AdExContrib.deployed().then(function(instance) {
       return instance.getPriceRate.call();
     }).then(function(rate) {
-        console.log(rate)
+        assert.equal(rate.valueOf(), 900*10000*100/30);
     });
   });
 

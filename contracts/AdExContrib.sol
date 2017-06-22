@@ -551,7 +551,7 @@ contract ADX is VestedToken {
 
 	// Create an illiquidBalance which cannot be traded until end of lockout period.
 	// Can only be called by crowdfund contract before the end time.
-	function createIlliquidToken(address _recipient, uint _value)
+	function createVestedToken(address _recipient, uint _value)
 		when_mintable
 		only_minter
 		returns (bool o_success)
@@ -691,7 +691,7 @@ contract AdExContrib {
 		multisigAddress = _multisig;
 		adexAddress = _adex;
 		ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
-		//ADXToken.createIlliquidToken(adexAddress, ALLOC_ILLIQUID_TEAM);
+		//ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
 		ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_NEW_USERS);

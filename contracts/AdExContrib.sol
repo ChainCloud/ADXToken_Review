@@ -262,7 +262,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
     uint64 cliff;
     uint64 vesting;
     uint64 start;        // 3 * 8 = 24 bytes
-    bool revokable;
+    bool revocable;
     bool burnsOnRevoke;  // 2 * 1 = 2 bits? or 2 bytes?
   } // total 78 bytes = 3 sstore per operation (32 per sstore)
 
@@ -284,7 +284,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
     uint64 _start,
     uint64 _cliff,
     uint64 _vesting,
-    bool _revokable,
+    bool _revocable,
     bool _burnsOnRevoke
   ) public {
 
@@ -297,12 +297,12 @@ contract VestedToken is StandardToken, LimitedTransferToken {
 
     uint256 count = grants[_to].push(
                 TokenGrant(
-                  _revokable ? msg.sender : 0, // avoid storing an extra 20 bytes when it is non-revokable
+                  _revocable ? msg.sender : 0, // avoid storing an extra 20 bytes when it is non-revocable
                   _value,
                   _cliff,
                   _vesting,
                   _start,
-                  _revokable,
+                  _revocable,
                   _burnsOnRevoke
                 )
               );
@@ -320,7 +320,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
   function revokeTokenGrant(address _holder, uint256 _grantId) public {
     TokenGrant grant = grants[_holder][_grantId];
 
-    if (!grant.revokable) { // Check if grant was revokable
+    if (!grant.revocable) { // Check if grant was revocable
       throw;
     }
 
@@ -436,7 +436,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
    * @return Returns all the values that represent a TokenGrant(address, value, start, cliff,
    * revokability, burnsOnRevoke, and vesting) plus the vested value at the current time.
    */
-  function tokenGrant(address _holder, uint256 _grantId) constant returns (address granter, uint256 value, uint256 vested, uint64 start, uint64 cliff, uint64 vesting, bool revokable, bool burnsOnRevoke) {
+  function tokenGrant(address _holder, uint256 _grantId) constant returns (address granter, uint256 value, uint256 vested, uint64 start, uint64 cliff, uint64 vesting, bool revocable, bool burnsOnRevoke) {
     TokenGrant grant = grants[_holder][_grantId];
 
     granter = grant.granter;
@@ -444,7 +444,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
     start = grant.start;
     cliff = grant.cliff;
     vesting = grant.vesting;
-    revokable = grant.revokable;
+    revocable = grant.revocable;
     burnsOnRevoke = grant.burnsOnRevoke;
 
     vested = vestedTokens(grant, uint64(now));

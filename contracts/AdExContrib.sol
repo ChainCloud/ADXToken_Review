@@ -705,17 +705,19 @@ contract AdExContrib {
 	}
 
 	//constant function returns the current ADX price.
-	function getPriceRate()
-		constant
-		returns (uint o_rate)
-	{
-		if (now <= publicStartTime + STAGE_ONE_TIME_END) return PRICE_STAGE_ONE;
-		if (now <= publicStartTime + STAGE_TWO_TIME_END) return PRICE_STAGE_TWO;
-		if (now <= publicStartTime + STAGE_THREE_TIME_END) return PRICE_STAGE_THREE;
-		if (now <= publicStartTime + STAGE_FOUR_TIME_END) return PRICE_STAGE_FOUR;
-		else return 0;
-	}
+  function getPriceRate()
+      constant
+      returns (uint o_rate)
+  {
+      uint delta = SafeMath.sub(now, publicStartTime);
 
+      if (delta > STAGE_THREE_TIME_END) return PRICE_STAGE_FOUR;
+      if (delta > STAGE_TWO_TIME_END) return PRICE_STAGE_THREE;
+      if (delta > STAGE_ONE_TIME_END) return PRICE_STAGE_TWO;
+
+      return (PRICE_STAGE_ONE);
+  }
+  
 	// Given the rate of a purchase and the remaining tokens in this tranche, it
 	// will throw if the sale would take it past the limit of the tranche.
 	// It executes the purchase for the appropriate amount of tokens, which

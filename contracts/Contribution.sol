@@ -691,7 +691,7 @@ contract Contribution {
 		multisigAddress = _multisig;
 		adexAddress = _adex;
 		ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
-		ADXToken.createIlliquidToken(adexAddress, ALLOC_ILLIQUID_TEAM);
+		//ADXToken.createIlliquidToken(adexAddress, ALLOC_ILLIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
 		ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_NEW_USERS);

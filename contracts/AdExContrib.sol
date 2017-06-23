@@ -9,7 +9,7 @@ pragma solidity ^0.4.11;
 // #1) ADX contract knows his owner (AdExContrib) - minter
 // #2) ADX contract allows transfer() when "from" is owner (AdExContrib), even if non transferrable period
 // #3) non transferrable period only affected by now > end
-// 4) all tokens 100,000,000 created at constructor of token sale, with owner being AdExContrib
+// #4) all tokens 100,000,000 created at constructor of token sale, with owner being AdExContrib
 
 import "../zeppelin-solidity/contracts/SafeMath.sol";
 import "../zeppelin-solidity/contracts/token/VestedToken.sol";
@@ -191,6 +191,8 @@ contract AdExContrib {
     ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
     ADXToken.createToken(adexAddress, ALLOC_WINGS);
     ADXToken.createToken(ownerAddress, ALLOC_TEAM); // this will be converted into vested token and sent to adexAddress by calling grantVested
+    ADXToken.createToken(this, ALLOC_CROWDSALE); // this will be transfer()-ed by the smart contract, i.e. minter in the ADX context
+    // no more createToken from now on
   }
 
   //May be used by owner of contract to halt crowdsale and no longer except ether.
@@ -228,7 +230,7 @@ contract AdExContrib {
     o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
     if (o_amount > _remaining) throw;
     if (!multisigAddress.send(msg.value)) throw;
-    if (!ADXToken.createToken(msg.sender, o_amount)) throw;
+    ADXToken.transfer(msg.sender, o_amount);
     ADXSold += o_amount;
     etherRaised += msg.value;
   }

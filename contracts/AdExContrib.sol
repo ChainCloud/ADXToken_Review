@@ -241,7 +241,7 @@ contract AdExContrib {
     only_prebuy
     is_not_halted
   {
-    uint amount = processPurchase(PRICE_PREBUY, PREBUY_PORTION_MAX - prebuyPortionTotal);
+    uint amount = processPurchase(PRICE_PREBUY, SafeMath.sub(PREBUY_PORTION_MAX, prebuyPortionTotal));
     prebuyPortionTotal += amount;
     PreBuy(amount);
   }
@@ -253,7 +253,7 @@ contract AdExContrib {
     is_crowdfund_period
     is_not_halted
   {
-    uint amount = processPurchase(getPriceRate(), ALLOC_CROWDSALE - ADXSold);
+    uint amount = processPurchase(getPriceRate(), SafeMath.sub(ALLOC_CROWDSALE, ADXSold));
     Buy(msg.sender, amount);
   }
 

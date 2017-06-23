@@ -766,6 +766,10 @@ contract AdExContrib {
     );
   }
 
+  // Used for easier testing
+  function balanceOf(address _addr) constant public returns (uint) {
+    return ADXToken.balanceOf(_addr);
+  }
 
   //failsafe drain
   function drain()

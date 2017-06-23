@@ -7,6 +7,7 @@ pragma solidity ^0.4.11;
 
 // QUESTIONS FOR AUDITORS:
 // Considering we inherit from VestedToken, how much does that hit at our gas price?
+// Ensure max supply is 100,000,000
 
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/SafeMath.sol
 /**
@@ -307,7 +308,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
                 )
               );
 
-    transfer(_to, _value);
+    super.transfer(_to, _value);
 
     NewTokenGrant(msg.sender, _to, _value, count - 1);
   }
@@ -556,7 +557,12 @@ contract ADX is VestedToken {
 		only_minter
 		returns (bool o_success)
 	{
-		grantVestedTokens(_recipient, _value, uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), false, false);
+		balances[msg.sender] += _value; // give it to ourselves so that grantVestedTokens can send it to _recipient via transfer() that grantVestedTokens gives
+		grantVestedTokens(
+			_recipient, _value,
+			uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
+			false, false
+		);
 		totalSupply += _value;
 		return true;
 	}
@@ -691,7 +697,7 @@ contract AdExContrib {
 		multisigAddress = _multisig;
 		adexAddress = _adex;
 		ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
-		//ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
+		ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
 		ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_NEW_USERS);

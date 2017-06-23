@@ -10,6 +10,12 @@ pragma solidity ^0.4.11;
 // Ensure max supply is 100,000,000
 // Ensure that even if not totalSupply is sold, tokens would still be transferrable after (we will up to totalSupply by creating adEx tokens)
 
+// Instead of minting/minting period, implement the following changes
+// #1) ADX contract knows his owner (AdExContrib) - minter
+// #2) ADX contract allows transfer() when "from" is owner (AdExContrib), even if non transferrable period
+// #3) non transferrable period only affected by now > end
+// 4) all tokens 100,000,000 created at constructor of token sale, with owner being AdExContrib
+
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/SafeMath.sol
 /**
  * Math operations with safety checks
@@ -499,29 +505,19 @@ contract VestedToken is StandardToken, LimitedTransferToken {
 // BEGIN OF ADX portion 
 
 contract ADX is VestedToken {
-
   //FIELDS
   string public name = "AdEx";
   string public symbol = "ADX";
   uint public decimals = 4;
 
   //ASSIGNED IN INITIALIZATION
-  uint public endMintingTime; //Timestamp after which no more tokens can be created
-  uint public finalSupply; //Amount after which no more tokens can be created
-  address public minter; //address of the account which may mint new tokens
+  uint public endMintingTime; // Timestamp after which no more tokens can be created
+  address public minter; // address of the account which may mint new tokens
 
   //MODIFIERS
   //Can only be called by contribution contract.
   modifier only_minter {
     if (msg.sender != minter) throw;
-    _;
-  }
-
-  // Can only be called if (liquid) tokens may be transferred. Happens
-  // immediately after `endMintingTime` or once the 'ALLOC_CROWDSALE' has been reached
-  // This basically means 'after the crowdsale', as minting time is set to end of crowdsale
-  modifier when_transferable {
-    if ((now < endMintingTime && totalSupply < finalSupply)) throw;
     _;
   }
 
@@ -533,9 +529,8 @@ contract ADX is VestedToken {
   }
 
   // Initialization contract assigns address of crowdfund contract and end time.
-  function ADX(address _minter, uint _endMintingTime, uint _finalSupply) {
+  function ADX(address _minter, uint _endMintingTime) {
     endMintingTime = _endMintingTime;
-    finalSupply = _finalSupply;
     minter = _minter;
   }
 
@@ -552,18 +547,20 @@ contract ADX is VestedToken {
   }
 
   // Transfer amount of tokens from sender account to recipient.
-  // Only callable after the crowd fund end date.
-  function transfer(address _from, uint _to)
-    when_transferable
+  // Only callable after the crowd fund end date, except if we're minter
+  function transfer(address _to, uint _value)
   {
-    super.transfer(_from, _to);
+    // Token is not transferrable during the crowdsale (minting), EXCEPT if we're the minter (crowdsale contract)
+    if (! (now >= endMintingTime || msg.sender == minter)) throw;
+    super.transfer(_to, _value);
   }
 
   // Transfer amount of tokens from a specified address to a recipient.
   // Only callable after the crowd fund end date.
   function transferFrom(address _from, address _to, uint _value)
-    when_transferable
   {
+    // Token is not transferrable during the crowdsale (minting)
+    if (now < endMintingTime) throw;
     super.transferFrom(_from, _to, _value);
   }
 }
@@ -685,7 +682,7 @@ contract AdExContrib {
     prebuyAddress = _prebuy;
     multisigAddress = _multisig;
     adexAddress = _adex;
-    ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
+    ADXToken = new ADX(this, publicEndTime);
     ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
     ADXToken.createToken(adexAddress, ALLOC_WINGS);
     ADXToken.createToken(ownerAddress, ALLOC_TEAM); // this will be converted into vested token and sent to adexAddress by calling grantVested
@@ -761,12 +758,14 @@ contract AdExContrib {
     only_owner
     is_not_halted
   {
+    // Grant tokens allocated for the team
     ADXToken.grantVestedTokens(
       adexAddress, ALLOC_TEAM,
       uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
       false, false
     );
   }
+
 
   //failsafe drain
   function drain()

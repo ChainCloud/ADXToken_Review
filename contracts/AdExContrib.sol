@@ -308,7 +308,7 @@ contract VestedToken is StandardToken, LimitedTransferToken {
                 )
               );
 
-    super.transfer(_to, _value);
+    transfer(_to, _value);
 
     NewTokenGrant(msg.sender, _to, _value, count - 1);
   }
@@ -550,8 +550,8 @@ contract ADX is VestedToken {
 		return true;
 	}
 
-	// Create an illiquidBalance which cannot be traded until end of lockout period.
-	// Can only be called by crowdfund contract before the end time.
+	// Create a vested token 
+	// Can only be called by crowdfund contract after the end time.
 	function createVestedToken(address _recipient, uint _value)
 		when_mintable
 		only_minter
@@ -655,6 +655,12 @@ contract AdExContrib {
 		_;
 	}
 
+  // Is completed
+  modifier is_crowdfund_completed() {
+    if (now < publicEndTime && ADXSold < ALLOC_CROWDSALE) throw;
+    _;
+  }
+
 	//May only be called by pre-buy
 	modifier only_prebuy() {
 		if (msg.sender != prebuyAddress) throw;
@@ -697,7 +703,6 @@ contract AdExContrib {
 		multisigAddress = _multisig;
 		adexAddress = _adex;
 		ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
-		ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
 		ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);
 		ADXToken.createToken(adexAddress, ALLOC_NEW_USERS);
@@ -766,6 +771,14 @@ contract AdExContrib {
 		uint amount = processPurchase(getPriceRate(), ALLOC_CROWDSALE - ADXSold);
 		Buy(msg.sender, amount);
 	}
+
+  // To be called at the end of crowdfund period
+  function grantVested()
+    is_crowdfund_completed
+    is_not_halted
+  {
+    ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
+  }
 
 	//failsafe drain
 	function drain()

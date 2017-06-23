@@ -8,6 +8,7 @@ pragma solidity ^0.4.11;
 // QUESTIONS FOR AUDITORS:
 // Considering we inherit from VestedToken, how much does that hit at our gas price?
 // Ensure max supply is 100,000,000
+// Ensure that even if not totalSupply is sold, tokens would still be transferrable after (we will up to totalSupply by creating adEx tokens)
 
 // https://github.com/OpenZeppelin/zeppelin-solidity/blob/v1.0.7/contracts/SafeMath.sol
 /**
@@ -550,23 +551,6 @@ contract ADX is VestedToken {
     return true;
   }
 
-  // Create a vested token 
-  // Can only be called by crowdfund contract after the end time.
-  function createVestedToken(address _recipient, uint _value)
-    when_mintable
-    only_minter
-    returns (bool o_success)
-  {
-    balances[msg.sender] += _value; // give it to ourselves so that grantVestedTokens can send it to _recipient via transfer() that grantVestedTokens gives
-    grantVestedTokens(
-      _recipient, _value,
-      uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
-      false, false
-    );
-    totalSupply += _value;
-    return true;
-  }
-
   // Transfer amount of tokens from sender account to recipient.
   // Only callable after the crowd fund end date.
   function transfer(address _from, uint _to)
@@ -611,11 +595,10 @@ contract AdExContrib {
 
   //ADX Token Limits
   uint public constant MAX_SUPPLY =        100000000*DECIMALS;
-  uint public constant ALLOC_ILLIQUID_TEAM = 8000000*DECIMALS;
-  uint public constant ALLOC_LIQUID_TEAM =  10000000*DECIMALS;
+  uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors
   uint public constant ALLOC_BOUNTIES =      2000000*DECIMALS;
-  uint public constant ALLOC_NEW_USERS =    40000000*DECIMALS;
-  uint public constant ALLOC_CROWDSALE =    40000000*DECIMALS;
+  uint public constant ALLOC_WINGS =         2000000*DECIMALS;
+  uint public constant ALLOC_CROWDSALE =    80000000*DECIMALS;
   uint public constant PREBUY_PORTION_MAX = 32 * DECIMALS * PRICE_PREBUY;
   
   //ASSIGNED IN INITIALIZATION
@@ -627,7 +610,7 @@ contract AdExContrib {
   //Special Addresses
   address public prebuyAddress; //Address used by pre-buy
   address public multisigAddress; //Address to which all ether flows.
-  address public adexAddress; //Address to which ALLOC_BOUNTIES, ALLOC_LIQUID_TEAM, ALLOC_NEW_USERS, ALLOC_ILLIQUID_TEAM is sent to.
+  address public adexAddress; //Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS  is (ultimately) sent to.
   address public ownerAddress; //Address of the contract owner. Can halt the crowdsale.
   
   //Contracts
@@ -704,8 +687,8 @@ contract AdExContrib {
     adexAddress = _adex;
     ADXToken = new ADX(this, publicEndTime, MAX_SUPPLY);
     ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
-    ADXToken.createToken(adexAddress, ALLOC_LIQUID_TEAM);
-    ADXToken.createToken(adexAddress, ALLOC_NEW_USERS);
+    ADXToken.createToken(adexAddress, ALLOC_WINGS);
+    ADXToken.createToken(ownerAddress, ALLOC_TEAM); // this will be converted into vested token and sent to adexAddress by calling grantVested
   }
 
   //May be used by owner of contract to halt crowdsale and no longer except ether.
@@ -775,9 +758,14 @@ contract AdExContrib {
   // To be called at the end of crowdfund period
   function grantVested()
     is_crowdfund_completed
+    only_owner
     is_not_halted
   {
-    ADXToken.createVestedToken(adexAddress, ALLOC_ILLIQUID_TEAM);
+    ADXToken.grantVestedTokens(
+      adexAddress, ALLOC_TEAM,
+      uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
+      false, false
+    );
   }
 
   //failsafe drain

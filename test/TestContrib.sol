@@ -5,10 +5,14 @@ import "truffle/DeployedAddresses.sol";
 import "../contracts/AdExContrib.sol";
 
 contract TestContrib {
+  //public uint initialBalance = 1 wei;
+  
+  AdExContrib contrib = AdExContrib(DeployedAddresses.AdExContrib());
+
+
   function testInitContrib() {
     //tx.origin, tx.origin, tx.origin, now, 0
-    AdExContrib contrib = AdExContrib(DeployedAddresses.AdExContrib());
-
     Assert.equal(contrib.getPriceRate(), 900*10000*100/30, "starts with proper price for stage one");
   }
+
 }

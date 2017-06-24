@@ -27,10 +27,10 @@ contract ADXToken is VestedToken {
 
   //Prices of ADX
   uint public constant PRICE_STANDARD    = 900*DECIMALS; // ADX received per one ETH; MAX_SUPPLY / (valuation / ethPrice)
-  uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 100/130;
-  uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 100/115;
+  uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 130/100; // 1ETH = 30% more ADX
+  uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 115/100; // 1ETH = 15% more ADX
   uint public constant PRICE_STAGE_THREE = PRICE_STANDARD;
-  uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/120; // 20% bonus will be given from illiquid tokens-
+  uint public constant PRICE_PREBUY      = PRICE_STAGE_ONE * 120/100; // 20% bonus will be given from illiquid tokens-
 
   //ADX Token Limits
   uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors

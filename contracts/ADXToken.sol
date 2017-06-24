@@ -172,7 +172,7 @@ contract ADXToken is VestedToken {
     returns (uint o_amount)
   {
     if (etherRaised > hardcapInEth) throw;
-    
+
     o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
 
     if (o_amount > _remaining) throw;
@@ -201,10 +201,10 @@ contract ADXToken is VestedToken {
     if (priceVested == 0) throw;
 
     uint amount = processPurchase(PRICE_STAGE_ONE + priceVested, SafeMath.sub(PREBUY_PORTION_MAX, prebuyPortionTotal));
-    grantVestedTokens(msg.sender, SafeMath.mul(msg.value, priceVested), 
-      uint64(now), uint64(now) + 91 days, uint64(now) + 365 days, 
-      false, false
-    );
+    // grantVestedTokens(msg.sender, SafeMath.mul(msg.value, priceVested), 
+    //   uint64(now), uint64(now) + 91 days, uint64(now) + 365 days, 
+    //   false, false
+    // );
     prebuyPortionTotal += amount;
     PreBuy(amount);
   }

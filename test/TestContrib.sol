@@ -12,7 +12,7 @@ contract TestContrib {
 
   function testInitContrib() {
     //tx.origin, tx.origin, tx.origin, now, 0
-    Assert.equal(contrib.getPriceRate(), 900*10000*100/30, "starts with proper price for stage one");
+    Assert.equal(contrib.getPriceRate(), 6923076, "starts with proper price for stage one");
   }
 
 }

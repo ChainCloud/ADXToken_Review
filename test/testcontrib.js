@@ -7,7 +7,7 @@ contract('ADXToken', function(accounts) {
   var token;
   var deployed = ADXToken.deployed();
 
-  var EXPECT_FOR_ONE_ETH = 900*10000*100/30;
+  var EXPECT_FOR_ONE_ETH = 6923076;
 
   it("should start with 0 eth raised", function() {
     //accounts[0]
@@ -51,6 +51,9 @@ contract('ADXToken', function(accounts) {
 
 
   // pre-sale
+
+  // tokens not transferrable
+
 
   // tokens transferable after end of crowdsale
 

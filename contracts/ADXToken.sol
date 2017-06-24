@@ -5,12 +5,6 @@ pragma solidity ^0.4.11;
 // - Ensure max supply is 100,000,000
 // - Ensure that even if not totalSupply is sold, tokens would still be transferrable after (we will up to totalSupply by creating adEx tokens)
 
-// Instead of minting/minting period, implement the following changes
-// #1) ADX contract knows his owner (AdExContrib) - minter
-// #2) ADX contract allows transfer() when "from" is owner (AdExContrib), even if non transferrable period
-// #3) non transferrable period only affected by now > end
-// #4) all tokens 100,000,000 created at constructor of token sale, with owner being AdExContrib
-
 // vesting: 365 days, 365 days / 4 vesting
 
 import "../zeppelin-solidity/contracts/SafeMath.sol";
@@ -211,7 +205,7 @@ contract ADXToken is VestedToken {
     // Grant tokens allocated for the team
     grantVestedTokens(
       adexAddress, ALLOC_TEAM,
-      uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
+      uint64(now), uint64(now) + 91 days , uint64(now) + 365 days, 
       false, false
     );
   }

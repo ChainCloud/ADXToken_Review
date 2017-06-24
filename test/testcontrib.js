@@ -53,17 +53,20 @@ contract('ADXToken', function(accounts) {
 
   it("pre-buy state: can pre-buy", function() {
     var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
-    return new Promise((resolve, reject) => {
-        crowdsale.preBuy({
-          from: prebuyAddr,
-          value: web3.toWei(3.030333, 'ether'),
-          gas: 130000
-        }).then(() => {          
-          crowdsale.balanceOf(prebuyAddr).then(function(res) {
-            assert.equal(50750001, res.toNumber())
-            resolve()
-          })
-        })
+    return crowdsale.preBuy({
+      from: prebuyAddr,
+      value: web3.toWei(3.030333, 'ether'),
+      gas: 260000
+    }).then(() => {          
+      return crowdsale.balanceOf(prebuyAddr)
+    })
+    .then((res) => {
+        assert.equal(50750001, res.toNumber())
+        return crowdsale.transferableTokens(prebuyAddr, Math.floor(Date.now()/1000))
+    })
+    .then(function(transferrable) {
+        // 15295105 is vested portion at the hardcoded vested bonus
+       assert.equal(50750001-15295105, transferrable.toNumber())
     })
   });
   

@@ -16,68 +16,11 @@ pragma solidity ^0.4.11;
 import "../zeppelin-solidity/contracts/SafeMath.sol";
 import "../zeppelin-solidity/contracts/token/VestedToken.sol";
 
-contract ADX is VestedToken {
+contract ADXToken is VestedToken {
   //FIELDS
   string public name = "AdEx";
   string public symbol = "ADX";
   uint public decimals = 4;
-
-  //ASSIGNED IN INITIALIZATION
-  uint public endMintingTime; // Timestamp after which no more tokens can be created
-  address public minter; // address of the account which may mint new tokens
-
-  //MODIFIERS
-  //Can only be called by contribution contract.
-  modifier only_minter {
-    if (msg.sender != minter) throw;
-    _;
-  }
-
-  // Can only be called if the `crowdfunder` is allowed to mint tokens. Any
-  // time before ` endMintingTime`.
-  modifier when_mintable {
-    if (now >= endMintingTime) throw;
-    _;
-  }
-
-  // Initialization contract assigns address of crowdfund contract and end time.
-  function ADX(address _minter, uint _endMintingTime) {
-    endMintingTime = _endMintingTime;
-    minter = _minter;
-  }
-
-  // Create new tokens when called by the crowdfund contract.
-  // Only callable before the end time.
-  function createToken(address _recipient, uint _value)
-    when_mintable
-    only_minter
-    returns (bool o_success)
-  {
-    balances[_recipient] += _value;
-    totalSupply += _value;
-    return true;
-  }
-
-  // Transfer amount of tokens from sender account to recipient.
-  // Only callable after the crowd fund end date, except if we're minter
-  function transfer(address _to, uint _value)
-  {
-    // Token is not transferrable during the crowdsale (minting), EXCEPT if we're the minter (crowdsale contract)
-    if (! (now >= endMintingTime || msg.sender == minter)) throw;
-    super.transfer(_to, _value);
-  }
-
-  // Transfer amount of tokens from a specified address to a recipient.
-  // Only callable after the crowd fund end date.
-  function transferFrom(address _from, address _to, uint _value)
-  {
-    if (now < endMintingTime) throw;
-    super.transferFrom(_from, _to, _value);
-  }
-}
-
-contract AdExContrib {
-  //FIELDS
 
   //CONSTANTS
   //Time limits
@@ -85,8 +28,7 @@ contract AdExContrib {
   uint public constant STAGE_TWO_TIME_END = 1 weeks; // first week bonus
   uint public constant STAGE_THREE_TIME_END = 4 weeks;
   
-  // Decimals
-  // WARNING: Must be synced up with ADX.decimals
+  // Multiplier for the decimals
   uint private constant DECIMALS = 10000;
 
   //Prices of ADX
@@ -97,7 +39,6 @@ contract AdExContrib {
   uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/30; // 20% bonus will be given from illiquid tokens-
 
   //ADX Token Limits
-  //uint public constant MAX_SUPPLY =        100000000*DECIMALS;
   uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors
   uint public constant ALLOC_BOUNTIES =      2000000*DECIMALS;
   uint public constant ALLOC_WINGS =         2000000*DECIMALS;
@@ -113,12 +54,9 @@ contract AdExContrib {
   //Special Addresses
   address public prebuyAddress; // Address used by pre-buy
   address public multisigAddress; // Address to which all ether flows.
-  address public adexAddress; // Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS  is (ultimately) sent to.
+  address public adexAddress; // Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS is (ultimately) sent to.
   address public ownerAddress; // Address of the contract owner. Can halt the crowdsale.
-  
-  //Contracts
-  ADX public ADXToken; // External token contract hollding the ADX
-  
+
   //Running totals
   uint public etherRaised; // Total Ether raised.
   uint public ADXSold; // Total ADX created
@@ -127,8 +65,7 @@ contract AdExContrib {
   //booleans
   bool public halted; // halts the crowd sale if true.
 
-  //FUNCTION MODIFIERS
-
+  // MODIFIERS
   //Is currently in the period after the private start time and before the public start time.
   modifier is_pre_crowdfund_period() {
     if (now >= publicStartTime || now < privateStartTime) throw;
@@ -169,11 +106,8 @@ contract AdExContrib {
   event PreBuy(uint _amount);
   event Buy(address indexed _recipient, uint _amount);
 
-
-  // FUNCTIONS
-
-  //Initialization function. Deploys ADXToken contract assigns values, to all remaining fields, creates first entitlements in the ADX Token contract.
-  function AdExContrib(
+  // Initialization contract assigns address of crowdfund contract and end time.
+  function ADXToken(
     address _prebuy,
     address _multisig,
     address _adex,
@@ -187,19 +121,29 @@ contract AdExContrib {
     prebuyAddress = _prebuy;
     multisigAddress = _multisig;
     adexAddress = _adex;
-    ADXToken = new ADX(this, publicEndTime);
-    ADXToken.createToken(adexAddress, ALLOC_BOUNTIES);
-    ADXToken.createToken(adexAddress, ALLOC_WINGS);
-    ADXToken.createToken(ownerAddress, ALLOC_TEAM); // this will be converted into vested token and sent to adexAddress by calling grantVested
-    ADXToken.createToken(this, ALLOC_CROWDSALE); // this will be transfer()-ed by the smart contract, i.e. minter in the ADX context
-    // no more createToken from now on
+
+    balances[adexAddress] += ALLOC_BOUNTIES;
+    balances[adexAddress] += ALLOC_WINGS;
+
+    balances[ownerAddress] += ALLOC_TEAM;
+
+    balances[ownerAddress] += ALLOC_CROWDSALE;
   }
 
-  //May be used by owner of contract to halt crowdsale and no longer except ether.
-  function toggleHalt(bool _halted)
-    only_owner
+  // Transfer amount of tokens from sender account to recipient.
+  // Only callable after the crowd fund is completed
+  function transfer(address _to, uint _value)
+    is_crowdfund_completed
   {
-    halted = _halted;
+    super.transfer(_to, _value);
+  }
+
+  // Transfer amount of tokens from a specified address to a recipient.
+  // Transfer amount of tokens from sender account to recipient.
+  function transferFrom(address _from, address _to, uint _value)
+    is_crowdfund_completed
+  {
+    super.transferFrom(_from, _to, _value);
   }
 
   //constant function returns the current ADX price.
@@ -227,9 +171,13 @@ contract AdExContrib {
     returns (uint o_amount)
   {
     o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
+
     if (o_amount > _remaining) throw;
     if (!multisigAddress.send(msg.value)) throw;
-    ADXToken.transfer(msg.sender, o_amount);
+
+    balances[ownerAddress] = balances[ownerAddress].sub(o_amount);
+    balances[msg.sender] = balances[msg.sender].add(o_amount);
+
     ADXSold += o_amount;
     etherRaised += msg.value;
   }
@@ -265,16 +213,18 @@ contract AdExContrib {
     is_not_halted
   {
     // Grant tokens allocated for the team
-    ADXToken.grantVestedTokens(
+    grantVestedTokens(
       adexAddress, ALLOC_TEAM,
       uint64(now), uint64(now) + ( 3 * 30 days ), uint64(now) + ( 12 * 30 days ), 
       false, false
     );
   }
 
-  // Used for easier testing
-  function balanceOf(address _addr) constant public returns (uint) {
-    return ADXToken.balanceOf(_addr);
+  //May be used by owner of contract to halt crowdsale and no longer except ether.
+  function toggleHalt(bool _halted)
+    only_owner
+  {
+    halted = _halted;
   }
 
   //failsafe drain

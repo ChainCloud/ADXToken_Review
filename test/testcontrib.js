@@ -1,11 +1,11 @@
-var AdExContrib = artifacts.require("./AdExContrib.sol");
+var ADXToken = artifacts.require("./ADXToken.sol");
 var Promise = require('bluebird')
 
-contract('AdExContrib', function(accounts) {
+contract('ADXToken', function(accounts) {
 
   var crowdsale;
   var token;
-  var deployed = AdExContrib.deployed();
+  var deployed = ADXToken.deployed();
 
   var EXPECT_FOR_ONE_ETH = 900*10000*100/30;
 
@@ -16,11 +16,7 @@ contract('AdExContrib', function(accounts) {
       return instance.getPriceRate.call();
     }).then(function(rate) {
         assert.equal(rate.valueOf(), EXPECT_FOR_ONE_ETH);
-
-        return crowdsale.ADXToken.call();
-    }).then(function(_token) {
-      token = _token;
-    });
+    })
   });
 
   it('Should allow to send ETH in exchange of Tokens', () => {
@@ -53,4 +49,10 @@ contract('AdExContrib', function(accounts) {
     }))
   })
 
+
+  // pre-sale
+
+  // tokens transferable after end of crowdsale
+
+  // vested tokens
 });

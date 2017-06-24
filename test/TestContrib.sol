@@ -2,12 +2,12 @@ pragma solidity ^0.4.11;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../contracts/AdExContrib.sol";
+import "../contracts/ADXToken.sol";
 
 contract TestContrib {
   //public uint initialBalance = 1 wei;
   
-  AdExContrib contrib = AdExContrib(DeployedAddresses.AdExContrib());
+  ADXToken contrib = ADXToken(DeployedAddresses.ADXToken());
 
 
   function testInitContrib() {

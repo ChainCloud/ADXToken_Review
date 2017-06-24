@@ -33,10 +33,10 @@ contract ADXToken is VestedToken {
 
   //Prices of ADX
   uint public constant PRICE_STANDARD    = 900*DECIMALS; // ADX received per one ETH; MAX_SUPPLY / (valuation / ethPrice)
-  uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 100/30;
-  uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 100/15;
+  uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 100/130;
+  uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 100/115;
   uint public constant PRICE_STAGE_THREE = PRICE_STANDARD;
-  uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/30; // 20% bonus will be given from illiquid tokens-
+  uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/120; // 20% bonus will be given from illiquid tokens-
 
   //ADX Token Limits
   uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors
@@ -161,11 +161,7 @@ contract ADXToken is VestedToken {
   
   // Given the rate of a purchase and the remaining tokens in this tranche, it
   // will throw if the sale would take it past the limit of the tranche.
-  // It executes the purchase for the appropriate amount of tokens, which
-  // involves adding it to the total, minting ADX tokens and stashing the
-  // ether.
-  // Returns `amount` in scope as the number of ADX tokens that it will
-  // purchase.
+  // Returns `amount` in scope as the number of ADX tokens that it will purchase.
   function processPurchase(uint _rate, uint _remaining)
     internal
     returns (uint o_amount)

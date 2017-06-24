@@ -11,6 +11,8 @@ pragma solidity ^0.4.11;
 // #3) non transferrable period only affected by now > end
 // #4) all tokens 100,000,000 created at constructor of token sale, with owner being AdExContrib
 
+// vesting: 365 days, 365 days / 4 vesting
+
 import "../zeppelin-solidity/contracts/SafeMath.sol";
 import "../zeppelin-solidity/contracts/token/VestedToken.sol";
 
@@ -80,9 +82,8 @@ contract AdExContrib {
   //CONSTANTS
   //Time limits
   uint public constant STAGE_ONE_TIME_END = 24 hours; // first day bonus
-  uint public constant STAGE_TWO_TIME_END = 1 weeks;
-  uint public constant STAGE_THREE_TIME_END = 2 weeks;
-  uint public constant STAGE_FOUR_TIME_END = 4 weeks;
+  uint public constant STAGE_TWO_TIME_END = 1 weeks; // first week bonus
+  uint public constant STAGE_THREE_TIME_END = 4 weeks;
   
   // Decimals
   // WARNING: Must be synced up with ADX.decimals
@@ -93,11 +94,10 @@ contract AdExContrib {
   uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 100/30;
   uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 100/15;
   uint public constant PRICE_STAGE_THREE = PRICE_STANDARD;
-  uint public constant PRICE_STAGE_FOUR  = PRICE_STANDARD;
   uint public constant PRICE_PREBUY      = PRICE_STANDARD * 100/30; // 20% bonus will be given from illiquid tokens-
 
   //ADX Token Limits
-  uint public constant MAX_SUPPLY =        100000000*DECIMALS;
+  //uint public constant MAX_SUPPLY =        100000000*DECIMALS;
   uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors
   uint public constant ALLOC_BOUNTIES =      2000000*DECIMALS;
   uint public constant ALLOC_WINGS =         2000000*DECIMALS;
@@ -209,7 +209,6 @@ contract AdExContrib {
   {
       uint delta = SafeMath.sub(now, publicStartTime);
 
-      if (delta > STAGE_THREE_TIME_END) return PRICE_STAGE_FOUR;
       if (delta > STAGE_TWO_TIME_END) return PRICE_STAGE_THREE;
       if (delta > STAGE_ONE_TIME_END) return PRICE_STAGE_TWO;
 

@@ -52,6 +52,9 @@ contract ADXToken is VestedToken {
   address public preBuy1; // Address used by pre-buy
   address public preBuy2; // Address used by pre-buy
   address public preBuy3; // Address used by pre-buy
+  uint public preBuyPrice1; // price for pre-buy
+  uint public preBuyPrice2; // price for pre-buy
+  uint public preBuyPrice3; // price for pre-buy
 
   //Running totals
   uint public etherRaised; // Total Ether raised.
@@ -104,9 +107,9 @@ contract ADXToken is VestedToken {
     uint _publicStartTime,
     uint _privateStartTime,
     uint _hardcapInEth,
-    address _prebuy1,
-    address _prebuy2,
-    address _prebuy3
+    address _prebuy1, uint _preBuyPrice1,
+    address _prebuy2, uint _preBuyPrice2,
+    address _prebuy3, uint _preBuyPrice3
   ) {
     ownerAddress = msg.sender;
     publicStartTime = _publicStartTime;
@@ -118,8 +121,11 @@ contract ADXToken is VestedToken {
     hardcapInEth = _hardcapInEth;
 
     preBuy1 = _prebuy1;
+    preBuyPrice1 = _preBuyPrice1;
     preBuy2 = _prebuy2;
+    preBuyPrice3 = _preBuyPrice2;
     preBuy3 = _prebuy3;
+    preBuyPrice3 = _preBuyPrice3;
 
     balances[adexAddress] += ALLOC_BOUNTIES;
     balances[adexAddress] += ALLOC_WINGS;
@@ -186,9 +192,9 @@ contract ADXToken is VestedToken {
     // Pre-buy participants would get the first-day price, as well as a bonus of vested tokens
     uint priceVested = 0;
 
-    if (msg.sender == preBuy1) priceVested = 5047335;
-    if (msg.sender == preBuy2) priceVested = 5047335; // TODO: change according to terms
-    if (msg.sender == preBuy3) priceVested = 5047335; // TODO: change according to terms
+    if (msg.sender == preBuy1) priceVested = preBuyPrice1;
+    if (msg.sender == preBuy2) priceVested = preBuyPrice2;
+    if (msg.sender == preBuy3) priceVested = preBuyPrice3;
 
     if (priceVested == 0) throw;
 

@@ -105,7 +105,10 @@ contract('ADXToken', function(accounts) {
 
   // vested tokens
 
+  // pre-buy
+  
   // hard cap can be reached
 
-  // bounty tokens can be distributed 
+  // bounty tokens can be distributed
+
 });

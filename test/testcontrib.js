@@ -54,8 +54,58 @@ contract('ADXToken', function(accounts) {
 
   // tokens not transferrable
 
+  it('Shouldnt allow to transfer tokens before end of crowdsale', () => {
+    return crowdsale.transfer(web3.eth.accounts[4], 50, {
+      from: web3.eth.accounts[5]
+    }).then(() => {
+      throw new Error('Cant be here')
+    }).catch(err => {
+      assert.equal(err.message, 'VM Exception while processing transaction: invalid opcode')
+    }).then(() => {
+      return Promise.join(
+        crowdsale.balanceOf.call(web3.eth.accounts[4]),
+        crowdsale.balanceOf.call(web3.eth.accounts[5]),
+        (toBalance, fromBalance) => {
+        	assert.equal(toBalance.valueOf(), EXPECT_FOR_ONE_ETH)
+        	assert.equal(fromBalance.valueOf(), EXPECT_FOR_ONE_ETH)
+
+        }
+      )
+    })
+  })
+
+  it('Change time', () => {
+  	return new Promise((resolve, reject) => {
+	  	 web3.currentProvider.sendAsync({
+	      jsonrpc: "2.0",
+	      method: "evm_increaseTime",
+	      params: [Math.floor(Date.now()/1000)+40*24*60*60],
+	      id: new Date().getTime()
+	    }, (err, result) => {
+	      err? reject(err) : resolve()
+	    })
+  	})
+  })
 
   // tokens transferable after end of crowdsale
+  it('Should allow to transfer tokens after end of crowdsale', () => {
+    return crowdsale.transfer(web3.eth.accounts[4], 50, {
+      from: web3.eth.accounts[5]
+    }).then(() => {
+       return Promise.join(
+        crowdsale.balanceOf.call(web3.eth.accounts[4]),
+        crowdsale.balanceOf.call(web3.eth.accounts[5]),
+        (toBalance, fromBalance) => {
+        	assert.equal(toBalance.valueOf(), EXPECT_FOR_ONE_ETH+50)
+        	assert.equal(fromBalance.valueOf(), EXPECT_FOR_ONE_ETH-50)
+        }
+      )
+    })
+  })
 
   // vested tokens
+
+  // hard cap can be reached
+
+  // bounty tokens can be distributed 
 });

@@ -171,6 +171,8 @@ contract ADXToken is VestedToken {
     internal
     returns (uint o_amount)
   {
+    if (etherRaised > hardcapInEth) throw;
+    
     o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
 
     if (o_amount > _remaining) throw;

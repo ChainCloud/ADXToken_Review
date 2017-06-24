@@ -79,8 +79,12 @@ contract ADXToken is VestedToken {
 
   // Is completed
   modifier is_crowdfund_completed() {
-    if (now < publicEndTime && ADXSold < ALLOC_CROWDSALE) throw;
+    if (!isCrowdfundCompleted()) throw;
     _;
+  }
+  function isCrowdfundCompleted() internal returns (bool) {
+    if (now > publicEndTime || ADXSold >= ALLOC_CROWDSALE) return true;
+    return false;
   }
 
   //May only be called by the owner address
@@ -138,8 +142,9 @@ contract ADXToken is VestedToken {
   // Transfer amount of tokens from sender account to recipient.
   // Only callable after the crowd fund is completed
   function transfer(address _to, uint _value)
-    is_crowdfund_completed
   {
+    if (_to == msg.sender) return; // no-op, allow even during crowdsale, in order to work around using grantVestedTokens() while in crowdsale
+    if (!isCrowdfundCompleted()) throw;
     super.transfer(_to, _value);
   }
 
@@ -163,6 +168,14 @@ contract ADXToken is VestedToken {
 
       return (PRICE_STAGE_ONE);
   }
+
+  // calculates wmount of ADX we get, given the wei and the rates we've defined per 1 eth
+  function calcAmount(uint _wei, uint _rate) 
+    constant
+    returns (uint) 
+  {
+    return SafeMath.div(SafeMath.mul(_wei, _rate), 1 ether);
+  } 
   
   // Given the rate of a purchase and the remaining tokens in this tranche, it
   // will throw if the sale would take it past the limit of the tranche.
@@ -173,7 +186,7 @@ contract ADXToken is VestedToken {
   {
     if (etherRaised > hardcapInEth) throw;
 
-    o_amount = SafeMath.div(SafeMath.mul(msg.value, _rate), 1 ether);
+    o_amount = calcAmount(msg.value, _rate);
 
     if (o_amount > _remaining) throw;
     if (!multisigAddress.send(msg.value)) throw;
@@ -201,10 +214,10 @@ contract ADXToken is VestedToken {
     if (priceVested == 0) throw;
 
     uint amount = processPurchase(PRICE_STAGE_ONE + priceVested, SafeMath.sub(PREBUY_PORTION_MAX, prebuyPortionTotal));
-    // grantVestedTokens(msg.sender, SafeMath.mul(msg.value, priceVested), 
-    //   uint64(now), uint64(now) + 91 days, uint64(now) + 365 days, 
-    //   false, false
-    // );
+    grantVestedTokens(msg.sender, calcAmount(msg.value, priceVested), 
+      uint64(now), uint64(now) + 91 days, uint64(now) + 365 days, 
+      false, false
+    );
     prebuyPortionTotal += amount;
     PreBuy(amount);
   }

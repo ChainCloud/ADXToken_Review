@@ -9,7 +9,8 @@ contract('ADXToken', function(accounts) {
 
   var EXPECT_FOR_ONE_ETH = 11700000;
 
-  
+var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
+
   it("should start with 0 eth", function() {
     //accounts[0]
     return deployed.then(function(instance) {
@@ -22,8 +23,6 @@ contract('ADXToken', function(accounts) {
 
 
   it("pre-buy state: cannot send ETH in exchange for tokens", function() {
-    var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
-
     return new Promise((resolve, reject) => {
         web3.eth.sendTransaction({
           from: prebuyAddr,
@@ -51,8 +50,11 @@ contract('ADXToken', function(accounts) {
     })
   });
 
-  it("pre-buy state: can pre-buy", function() {
-    var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
+  it("pre-buy state: can pre-buy, vested tokens are properly vested", function() {
+    var start = Math.floor(Date.now()/1000);
+    var vestedPortion = 15295105;
+    var totalExpected = 50750001;
+    var unvestedPortion = totalExpected-vestedPortion;
     return crowdsale.preBuy({
       from: prebuyAddr,
       value: web3.toWei(3.030333, 'ether'),
@@ -61,13 +63,22 @@ contract('ADXToken', function(accounts) {
       return crowdsale.balanceOf(prebuyAddr)
     })
     .then((res) => {
-        assert.equal(50750001, res.toNumber())
-        return crowdsale.transferableTokens(prebuyAddr, Math.floor(Date.now()/1000))
+        assert.equal(totalExpected, res.toNumber())
+        return crowdsale.transferableTokens(prebuyAddr, start)
     })
     .then(function(transferrable) {
         // 15295105 is vested portion at the hardcoded vested bonus
-       assert.equal(50750001-15295105, transferrable.toNumber())
+       assert.equal(unvestedPortion, transferrable.toNumber())
+       return crowdsale.transferableTokens(prebuyAddr, start+50*24*60*60)
+    }).then(function(transferrableBeforeCliff) {
+        assert.equal(unvestedPortion, transferrableBeforeCliff.toNumber())
+       //return crowdsale.transferableTokens(prebuyAddr, start+92*24*60*60)
     })
+    // .then(function(transfrrableAfterCliff) {
+    //     console.log(transfrrableAfterCliff.toNumber())
+    //     // 1/4 of the tokens should now be non-vested
+    //     assert.equal(unvestedPortion+(91/365*vestedPortion), transfrrableAfterCliff.toNumber())
+    // })
   });
   
   it('Change time to crowdsale open', () => {
@@ -138,7 +149,7 @@ contract('ADXToken', function(accounts) {
     })
   })
 
-  it('Change time', () => {
+  it('Change time to 40 days after crowdsale', () => {
     return new Promise((resolve, reject) => {
          web3.currentProvider.sendAsync({
           jsonrpc: "2.0",
@@ -167,9 +178,22 @@ contract('ADXToken', function(accounts) {
     })
   })
 
-  // vested tokens
+  it('Change time to 40 days after', () => {
+    return new Promise((resolve, reject) => {
+         web3.currentProvider.sendAsync({
+          jsonrpc: "2.0",
+          method: "evm_increaseTime",
+          params: [40*24*60*60],
+          id: new Date().getTime()
+        }, (err, result) => {
+          err? reject(err) : resolve()
+        })
+    })
+  })
 
-  // pre-buy
+  // should allow for calling grantVested()
+
+  // vested tokens
 
   // hard cap can be reached
 

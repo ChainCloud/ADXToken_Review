@@ -69,16 +69,14 @@ var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
     .then(function(transferrable) {
         // 15295105 is vested portion at the hardcoded vested bonus
        assert.equal(unvestedPortion, transferrable.toNumber())
-       return crowdsale.transferableTokens(prebuyAddr, start+50*24*60*60)
+       return crowdsale.transferableTokens(prebuyAddr, start+90*24*60*60)
     }).then(function(transferrableBeforeCliff) {
         assert.equal(unvestedPortion, transferrableBeforeCliff.toNumber())
-       //return crowdsale.transferableTokens(prebuyAddr, start+92*24*60*60)
+       return crowdsale.transferableTokens(prebuyAddr, start+91*24*60*60+1)
+    }).then(function(transfrrableAfterCliff) {
+        // 1/4 of the tokens should now be non-vested
+        assert.equal(Math.round(unvestedPortion+(91/365*vestedPortion)), transfrrableAfterCliff.toNumber())
     })
-    // .then(function(transfrrableAfterCliff) {
-    //     console.log(transfrrableAfterCliff.toNumber())
-    //     // 1/4 of the tokens should now be non-vested
-    //     assert.equal(unvestedPortion+(91/365*vestedPortion), transfrrableAfterCliff.toNumber())
-    // })
   });
   
   it('Change time to crowdsale open', () => {

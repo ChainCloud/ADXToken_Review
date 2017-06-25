@@ -190,7 +190,15 @@ var prebuyAddr = web3.eth.accounts[1]; // one of the pre-buy addresses
   })
 
   // should allow for calling grantVested()
-
+  it('call grantVested()', () => {
+    var start;
+    return crowdsale.ownerAddress.call()
+    .then(function(ownerAddr) {
+        return crowdsale.grantVested({ from: ownerAddr })
+    }).then(function() {
+        start = Math.floor(Date.now()/1000);
+    })
+  })
   // vested tokens
 
   // hard cap can be reached

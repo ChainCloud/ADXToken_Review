@@ -47,7 +47,8 @@ contract ADXToken is VestedToken {
 
   //Special Addresses
   address public multisigAddress; // Address to which all ether flows.
-  address public adexAddress; // Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS is (ultimately) sent to.
+  address public adexTeamAddress; // Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS is (ultimately) sent to.
+  address public adexFundAddress;
   address public ownerAddress; // Address of the contract owner. Can halt the crowdsale.
   address public preBuy1; // Address used by pre-buy
   address public preBuy2; // Address used by pre-buy
@@ -107,7 +108,7 @@ contract ADXToken is VestedToken {
   function ADXToken(
     address _multisig,
     address _adexTeam,
-    //address _adexFund,
+    address _adexFund,
     uint _publicStartTime,
     uint _privateStartTime,
     uint _hardcapInEth,
@@ -120,7 +121,8 @@ contract ADXToken is VestedToken {
     privateStartTime = _privateStartTime;
     publicEndTime = _publicStartTime + 4 weeks;
     multisigAddress = _multisig;
-    adexAddress = _adexTeam;
+    adexTeamAddress = _adexTeam;
+    adexFundAddress = _adexFund;
 
     hardcapInEth = _hardcapInEth;
 
@@ -131,8 +133,8 @@ contract ADXToken is VestedToken {
     preBuy3 = _prebuy3;
     preBuyPrice3 = _preBuyPrice3;
 
-    balances[adexAddress] += ALLOC_BOUNTIES;
-    balances[adexAddress] += ALLOC_WINGS;
+    balances[adexTeamAddress] += ALLOC_BOUNTIES;
+    balances[adexTeamAddress] += ALLOC_WINGS;
 
     balances[ownerAddress] += ALLOC_TEAM;
 
@@ -241,14 +243,14 @@ contract ADXToken is VestedToken {
   {
     // Grant tokens pre-allocated for the team
     grantVestedTokens(
-      adexAddress, ALLOC_TEAM,
+      adexTeamAddress, ALLOC_TEAM,
       uint64(now), uint64(now) + 91 days , uint64(now) + 365 days, 
       false, false
     );
 
     // Grant tokens that remain after crowdsale to the AdEx fund, vested for 2 years
     grantVestedTokens(
-      adexAddress, balances[ownerAddress],
+      adexFundAddress, balances[ownerAddress],
       uint64(now), uint64(now) + 182 days , uint64(now) + 730 days, 
       false, false
     );

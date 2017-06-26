@@ -5,7 +5,8 @@ module.exports = function(deployer) {
 
   deployer.deploy(ADXToken, 
   	web3.eth.accounts[0], // multisig
-  	web3.eth.accounts[0], // team
+  	web3.eth.accounts[9], // team
+  	web3.eth.accounts[8], // org
   	startDate+7*24*60*60, // public sale start
 	startDate, // private sale start
   	30800*1000000000000000000, // ETH hard cap, in wei

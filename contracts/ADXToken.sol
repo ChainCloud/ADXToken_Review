@@ -27,11 +27,16 @@ contract ADXToken is VestedToken {
 
   //Prices of ADX
   uint public constant PRICE_STANDARD    = 900*DECIMALS; // ADX received per one ETH; MAX_SUPPLY / (valuation / ethPrice)
+
+  ///// [review] 1170 tokens/1 ETH 1 day
   uint public constant PRICE_STAGE_ONE   = PRICE_STANDARD * 130/100; // 1ETH = 30% more ADX
+  ///// [review] 1035 tokens/1 ETH days 2,3,4,5,6,7
   uint public constant PRICE_STAGE_TWO   = PRICE_STANDARD * 115/100; // 1ETH = 15% more ADX
+  ///// [review] 900 tokens/1 ETH later
   uint public constant PRICE_STAGE_THREE = PRICE_STANDARD;
 
   //ADX Token Limits
+  ///// [review] total is 100000000 
   uint public constant ALLOC_TEAM =         16000000*DECIMALS; // team + advisors
   uint public constant ALLOC_BOUNTIES =      2000000*DECIMALS;
   uint public constant ALLOC_WINGS =         2000000*DECIMALS;
@@ -42,12 +47,15 @@ contract ADXToken is VestedToken {
   //Start and end times
   uint public publicStartTime; // Time in seconds public crowd fund starts.
   uint public privateStartTime; // Time in seconds when pre-buy can purchase up to 31250 ETH worth of ADX;
+
+  //// [review] publicStartTime + 4 weeks
   uint public publicEndTime; // Time in seconds crowdsale ends
   uint public hardcapInEth;
 
   //Special Addresses
   address public multisigAddress; // Address to which all ether flows.
   address public adexTeamAddress; // Address to which ALLOC_TEAM, ALLOC_BOUNTIES, ALLOC_WINGS is (ultimately) sent to.
+
   address public adexFundAddress;
   address public ownerAddress; // Address of the contract owner. Can halt the crowdsale.
   address public preBuy1; // Address used by pre-buy
@@ -67,34 +75,40 @@ contract ADXToken is VestedToken {
 
   // MODIFIERS
   //Is currently in the period after the private start time and before the public start time.
+  ///// [review] OK
   modifier is_pre_crowdfund_period() {
-    if (now >= publicStartTime || now < privateStartTime) throw;
+    if ((now >= publicStartTime) || (now < privateStartTime)) throw;
     _;
   }
 
   //Is currently the crowdfund period
+  ///// [review] OK
   modifier is_crowdfund_period() {
-    if (now < publicStartTime || now >= publicEndTime) throw;
+    if ((now < publicStartTime) || (now >= publicEndTime)) throw;
     _;
   }
 
   // Is completed
+  ///// [review] OK
   modifier is_crowdfund_completed() {
     if (!isCrowdfundCompleted()) throw;
     _;
   }
+  ///// [review] OK
   function isCrowdfundCompleted() internal returns (bool) {
-    if (now > publicEndTime || ADXSold >= ALLOC_CROWDSALE) return true;
+    if ((now > publicEndTime) || (ADXSold >= ALLOC_CROWDSALE)) return true;
     return false;
   }
 
   //May only be called by the owner address
+  ///// [review] OK
   modifier only_owner() {
     if (msg.sender != ownerAddress) throw;
     _;
   }
 
   //May only be called if the crowdfund has not been halted
+  ///// [review] OK
   modifier is_not_halted() {
     if (halted) throw;
     _;
@@ -117,6 +131,7 @@ contract ADXToken is VestedToken {
     address _prebuy3, uint _preBuyPrice3
   ) {
     ownerAddress = msg.sender;
+    ///// [review] add check that publicStartTime>privateStartTime
     publicStartTime = _publicStartTime;
     privateStartTime = _privateStartTime;
     publicEndTime = _publicStartTime + 4 weeks;
@@ -133,9 +148,11 @@ contract ADXToken is VestedToken {
     preBuy3 = _prebuy3;
     preBuyPrice3 = _preBuyPrice3;
 
+    ///// [review] optional - better move each to separate account
     balances[adexTeamAddress] += ALLOC_BOUNTIES;
     balances[adexTeamAddress] += ALLOC_WINGS;
 
+    ///// [review] this will be moved to adexTeamAddress (vested) in the 'grantVested' method
     balances[ownerAddress] += ALLOC_TEAM;
 
     balances[ownerAddress] += ALLOC_CROWDSALE;
@@ -143,6 +160,7 @@ contract ADXToken is VestedToken {
 
   // Transfer amount of tokens from sender account to recipient.
   // Only callable after the crowd fund is completed
+  ///// [review] use 'is_crowdfund_completed' modifier here
   function transfer(address _to, uint _value)
   {
     if (_to == msg.sender) return; // no-op, allow even during crowdsale, in order to work around using grantVestedTokens() while in crowdsale
@@ -152,6 +170,7 @@ contract ADXToken is VestedToken {
 
   // Transfer amount of tokens from a specified address to a recipient.
   // Transfer amount of tokens from sender account to recipient.
+  ///// [review] OK
   function transferFrom(address _from, address _to, uint _value)
     is_crowdfund_completed
   {
@@ -159,6 +178,7 @@ contract ADXToken is VestedToken {
   }
 
   //constant function returns the current ADX price.
+  ///// [review] use 'is_crowdfund_period' modifier here
   function getPriceRate()
       constant
       returns (uint o_rate)
@@ -172,6 +192,7 @@ contract ADXToken is VestedToken {
   }
 
   // calculates wmount of ADX we get, given the wei and the rates we've defined per 1 eth
+  ///// [review] OK
   function calcAmount(uint _wei, uint _rate) 
     constant
     returns (uint) 
@@ -182,10 +203,12 @@ contract ADXToken is VestedToken {
   // Given the rate of a purchase and the remaining tokens in this tranche, it
   // will throw if the sale would take it past the limit of the tranche.
   // Returns `amount` in scope as the number of ADX tokens that it will purchase.
+  ///// [review] OK, but too complex for 1 function
   function processPurchase(uint _rate, uint _remaining)
     internal
     returns (uint o_amount)
   {
+    ///// [review] better move to modifier
     if (etherRaised > hardcapInEth) throw;
 
     o_amount = calcAmount(msg.value, _rate);
@@ -196,11 +219,14 @@ contract ADXToken is VestedToken {
     balances[ownerAddress] = balances[ownerAddress].sub(o_amount);
     balances[msg.sender] = balances[msg.sender].add(o_amount);
 
+    ///// [review] better use SafeMath.add
     ADXSold += o_amount;
+    ///// [review] better use SafeMath.add
     etherRaised += msg.value;
   }
 
   //Special Function can only be called by pre-buy and only during the pre-crowdsale period.
+  ///// [review] OK
   function preBuy()
     payable
     is_pre_crowdfund_period
@@ -215,17 +241,23 @@ contract ADXToken is VestedToken {
 
     if (priceVested == 0) throw;
 
+    ///// [review] the price on a prebuy is lower than price for public (later)
+    ///// [review] msg.sender receives tokens
     uint amount = processPurchase(PRICE_STAGE_ONE + priceVested, SafeMath.sub(PREBUY_PORTION_MAX, prebuyPortionTotal));
+
+    ///// [review] vested tokens are issued for msg.sender
     grantVestedTokens(msg.sender, calcAmount(msg.value, priceVested), 
       uint64(now), uint64(now) + 91 days, uint64(now) + 365 days, 
       false, false
     );
+    ///// [review] better use SafeMath.add
     prebuyPortionTotal += amount;
     PreBuy(amount);
   }
 
   //Default function called by sending Ether to this address with no arguments.
   //Results in creation of new ADX Tokens if transaction would not exceed hard limit of ADX Token.
+  ///// [review] OK
   function()
     payable
     is_crowdfund_period
@@ -236,6 +268,7 @@ contract ADXToken is VestedToken {
   }
 
   // To be called at the end of crowdfund period
+  ///// [review] OK
   function grantVested()
     is_crowdfund_completed
     only_owner
@@ -257,6 +290,7 @@ contract ADXToken is VestedToken {
   }
 
   //May be used by owner of contract to halt crowdsale and no longer except ether.
+  ///// [review] OK
   function toggleHalt(bool _halted)
     only_owner
   {
@@ -264,6 +298,7 @@ contract ADXToken is VestedToken {
   }
 
   //failsafe drain
+  ///// [review] OK
   function drain()
     only_owner
   {
